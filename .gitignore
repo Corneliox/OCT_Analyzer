@@ -1,19 +1,48 @@
-# Output folders and logs
+# ==========================================
+# MATLAB & Environment Exclusions
+# ==========================================
+
+# MATLAB Autosave and temporary backup files
+*.asv
+*.m~
+*.bak
+*.autosave
+
+# MATLAB MEX and Code Generation artifacts
+*.mex*
+codegen/
+
+# ==========================================
+# Output, Logs & Temporary Analysis Data
+# ==========================================
+
+# Pipeline batch analysis outputs
 *_out/
 *_analysis/
 batch_log.txt
 *.csv
 
-# Compiled outputs and archives
+# Intermediate logs
+*.log
+
+# ==========================================
+# Compiled Packages & Distribution Binaries
+# ==========================================
+
+dist/
+OCTAnalyzer_installer/
+OCTAnalyzer_build/
 *.exe
 *.app
 *.zip
 *.tar.gz
-dist/
-OCTAnalyzer_installer/
-OCTAnalyzer_build/
 New folder/
 
-# System and temporary files
+# ==========================================
+# Operating System Files
+# ==========================================
+
 .DS_Store
-*.asv
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
