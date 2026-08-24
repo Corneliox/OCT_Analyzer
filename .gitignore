@@ -8,6 +8,8 @@ batch_log.txt
 *.exe
 *.app
 *.zip
+*.tar.gz
+dist/
 OCTAnalyzer_installer/
 OCTAnalyzer_build/
 New folder/

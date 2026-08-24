@@ -16,7 +16,7 @@ function compile_oct_app_installer()
 % -------- Config -------------------------------------------------------
 app_name   = 'OCTAnalyzer_Optimized';
 main_file  = 'OCTAnalyzerApp.m';
-output_dir = fullfile(fileparts(mfilename('fullpath')), 'OCTAnalyzer_installer');
+output_dir = fullfile(fileparts(mfilename('fullpath')), 'dist');
 
 extra_files = {
     'batch_analyze_tree.m'
