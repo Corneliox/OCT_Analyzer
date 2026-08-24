@@ -1,0 +1,17 @@
+# Output folders and logs
+*_out/
+*_analysis/
+batch_log.txt
+*.csv
+
+# Compiled outputs and archives
+*.exe
+*.app
+*.zip
+OCTAnalyzer_installer/
+OCTAnalyzer_build/
+New folder/
+
+# System and temporary files
+.DS_Store
+*.asv
