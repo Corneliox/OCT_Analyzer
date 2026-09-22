@@ -16,6 +16,8 @@ addParameter(p, 'PxPerMm', 200);
 addParameter(p, 'AvgColumns', 1);
 addParameter(p, 'SkipSegmented', true);
 addParameter(p, 'CropFrac', 0.5);
+addParameter(p, 'OutputDir', '');
+addParameter(p, 'FilePrefix', '');
 parse(p, varargin{:});
 opts = p.Results;
 % -----------------------------------------------------------------------
@@ -24,7 +26,11 @@ if ~exist(parent_folder, 'dir')
     error('Parent folder not found: %s', parent_folder);
 end
 parent_clean = regexprep(parent_folder, '[\\/]+$', '');
-analysis_dir = [parent_clean, '_analysis'];
+if ~isempty(opts.OutputDir)
+    analysis_dir = opts.OutputDir;
+else
+    analysis_dir = [parent_clean, '_analysis'];
+end
 if ~exist(analysis_dir, 'dir'); mkdir(analysis_dir); end
 
 % --- Find & order subfolders by _N (allowing trailing .ext) -----------
@@ -143,6 +149,15 @@ for f = 1:N
 end
 
 % --- Step 4: thickness time series in mm -------------------------------
+% Filter frame-to-frame impulse noise/spikes on end_ed time series
+try
+    end_ed_clean = hampel(end_ed, 7, 2.5);
+catch
+    end_ed_clean = medfilt1(end_ed, 7);
+end
+end_ed = smoothdata(end_ed_clean, 'sgolay', 9);
+end_ed = max(end_ed, bot_sc + 3);
+
 px_per_mm = opts.PxPerMm;
 sc_thick_mm     = (bot_sc - top_sc) / px_per_mm;
 ed_thick_mm     = (end_ed - bot_sc) / px_per_mm;
@@ -150,7 +165,11 @@ total_thick_mm  = (end_ed - top_sc) / px_per_mm;
 surface_disp_mm = (top_sc - top_sc(1)) / px_per_mm;
 
 % --- Step 5a: write CSV ------------------------------------------------
-csv_path = fullfile(analysis_dir, 'timeseries.csv');
+prefix_str = '';
+if ~isempty(opts.FilePrefix)
+    prefix_str = [regexprep(opts.FilePrefix, '[\\/]+$', ''), '_'];
+end
+csv_path = fullfile(analysis_dir, [prefix_str, 'timeseries.csv']);
 T = table((1:N).', [all_frames.sub_idx].', [all_frames.frame_idx].', ...
     {all_frames.name}.', ...
     top_sc, bot_sc, end_ed, ...
@@ -167,7 +186,7 @@ print_stats('Total thickness (mm)',total_thick_mm);
 print_stats('Surface displacement (mm)', surface_disp_mm);
 
 % --- Step 5b: save single-panel stacked PNG (cropped) ------------------
-png_path = fullfile(analysis_dir, 'timeseries.png');
+png_path = fullfile(analysis_dir, [prefix_str, 'timeseries.png']);
 make_figure(stacked_cols, top_sc, bot_sc, end_ed, ...
     png_path, parent_clean, px_per_mm, opts.CropFrac);
 fprintf('Saved figure: %s\n', png_path);

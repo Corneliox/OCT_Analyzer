@@ -1,11 +1,51 @@
-# OCT Skin Layer Analyzer
+# OCT Skin Layer Analyzer v2.1.0
 
 [![MATLAB](https://img.shields.io/badge/MATLAB-R2024b%2B-blue.svg)](https://www.mathworks.com/products/matlab.html)
-[![Release](https://img.shields.io/github/v/release/Corneliox/OCT_Analyzer?color=brightgreen)](https://github.com/Corneliox/OCT_Analyzer/releases)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
+[![Release](https://img.shields.io/badge/Release-v2.1.0-brightgreen.svg)](https://github.com/Corneliox/OCT_Analyzer/releases)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![License](https://img.shields.io/badge/License-Academic-green.svg)]()
 
-> **High-throughput, GPU-accelerated desktop application and automated analysis pipeline for skin optical coherence tomography (OCT) B-scan segmentation and dynamic thickness tracking.**
+> **High-throughput, GPU-accelerated desktop application and automated analysis pipeline for skin optical coherence tomography (OCT) B-scan segmentation, dynamic thickness tracking, and unattended batch processing.**
+
+---
+
+## ✨ What's New in v2.1.0
+
+* 🌲 **Recursive Subject-Level Batch Discovery (`_analysis` Placement):**
+  * Select any top/master folder (e.g., grouped by protocol sets or master folders); the batch engine automatically traverses the tree, identifies all subjects (`Sub1`, `Sub2`, etc.), and places each `SubX_analysis/` directory **directly beside each subject folder**.
+  * Supports scan folders ending in `_N` or `_N.bin`, keeping intermediate raw `_out` caches untouched.
+  * Integrated resume/skip logic: already analyzed conditions are safely skipped on re-runs.
+* 🛡️ **Spike-Free Epidermis (`end ED`) Extraction:**
+  * Re-engineered Dynamic Programming (DP) pathfinder with enhanced regularization penalty (`\lambda = 1.5 - 2.0`) and reduced jump radius.
+  * Multi-stage outlier rejection (Hampel filter + Savitzky-Golay smoothing) eliminates speckle noise traps and vertical impulse glitches across both B-scans and time-series plots.
+  * Enforced anatomical non-zero thickness priors ($z_{\text{ED}} \ge z_{\text{bot SC}} + \Delta$).
+* 🖥️ **Responsive High-DPI UI (Windows 10 & 11 Compatible):**
+  * Replaced rigid absolute positioning with a responsive `uigridlayout`.
+  * Seamless scaling on High-DPI monitors (100%, 125%, 150%, 175%) using native Segoe UI typography and auto-expanding log console.
+
+---
+
+## 📂 Supported Directory Structure
+
+```text
+Master_OCT_Study/                  <-- [Select this or any parent folder in the App]
+├── Subject_01/
+│   └── Protocol_A/
+│       ├── scan_0.bin/            (contains B-scan frames)
+│       ├── scan_0.bin_out/        (segmentation cache)
+│       └── scan_1.bin/
+├── Subject_01_analysis/           <-- [Generated right beside Subject_01]
+│   ├── timeseries.csv
+│   └── timeseries.png
+│
+├── Subject_02/
+│   └── Protocol_B/
+│       └── scan_0.bin/
+├── Subject_02_analysis/           <-- [Generated right beside Subject_02]
+│
+├── batch_summary.csv              <-- [Overall batch execution report]
+└── batch_log.txt                  <-- [Unattended execution log]
+```
 
 ---
 
@@ -55,9 +95,9 @@ flowchart TD
     A[Raw OCT B-Scans] --> B[Preprocessing: Red Channel + Median Filter + 50% Crop]
     B --> C[U-Net Variant A: ResNet-18 Deep Segmentation]
     C --> D[Probability Maps: BG / SC / ED]
-    D --> E[Vectorized Dynamic Programming Boundary Pathfinding]
+    D --> E[Regularized DP Pathfinding + Outlier Filtering]
     E --> F[Coordinate Extraction: top_sc, bot_sc, end_ed]
-    F --> G[timeseries.csv & timeseries.png Time-Depth Overlays]
+    F --> G[Subject-Level timeseries.csv & timeseries.png Overlays]
 ```
 
 ---

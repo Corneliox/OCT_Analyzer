@@ -36,9 +36,9 @@ classdef OCTAnalyzerApp < matlab.apps.AppBase
     methods (Access = private)
 
         function startupFcn(app)
-            app.UIFigure.Name = 'OCT Skin Layer Analyzer';
+            app.UIFigure.Name = 'OCT Skin Layer Analyzer v2.1.0';
             app.log('Ready. Pick the TOP folder that holds all your data.');
-            app.log('It finds and analyzes every scan underneath, skipping ones already done.');
+            app.log('Recursively discovers subjects and generates _analysis beside each subject folder.');
         end
 
         function browseFolder(app, ~, ~)
@@ -200,96 +200,168 @@ classdef OCTAnalyzerApp < matlab.apps.AppBase
 
     methods (Access = private)
         function createComponents(app)
-            app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [200 200 740 560];
-            app.UIFigure.Name = 'OCT Skin Layer Analyzer';
-            app.UIFigure.Color = app.BG;
+            % Dynamic figure position centered on screen
+            screen_size = get(0, 'ScreenSize'); % [left bottom width height]
+            app_w = min(840, round(screen_size(3) * 0.82));
+            app_h = min(620, round(screen_size(4) * 0.82));
+            left_pos = max(50, round((screen_size(3) - app_w) / 2));
+            bottom_pos = max(50, round((screen_size(4) - app_h) / 2));
 
-            app.TitleLabel = uilabel(app.UIFigure);
-            app.TitleLabel.Position = [20 510 700 32];
-            app.TitleLabel.Text = 'OCT Skin Layer Analyzer';
-            app.TitleLabel.FontSize = 20;
+            app.UIFigure = uifigure('Visible', 'off');
+            app.UIFigure.Position = [left_pos bottom_pos app_w app_h];
+            app.UIFigure.Name = 'OCT Skin Layer Analyzer v2.1.0';
+            app.UIFigure.Color = app.BG;
+            app.UIFigure.AutoResizeChildren = 'on';
+
+            % Main Grid Layout (Windows 10 & 11 High-DPI Responsive)
+            mainGrid = uigridlayout(app.UIFigure, [5, 1]);
+            mainGrid.RowHeight = {36, 36, 36, 42, '1x'};
+            mainGrid.ColumnWidth = {'1x'};
+            mainGrid.Padding = [15 15 15 15];
+            mainGrid.RowSpacing = 10;
+            mainGrid.BackgroundColor = app.BG;
+
+            % Row 1: Title
+            app.TitleLabel = uilabel(mainGrid);
+            app.TitleLabel.Layout.Row = 1;
+            app.TitleLabel.Layout.Column = 1;
+            app.TitleLabel.Text = 'OCT Skin Layer Analyzer v2.1.0';
+            app.TitleLabel.FontSize = 18;
             app.TitleLabel.FontWeight = 'bold';
+            app.TitleLabel.FontName = 'Segoe UI';
             app.TitleLabel.HorizontalAlignment = 'center';
             app.TitleLabel.FontColor = app.TEXT;
 
-            app.FolderLabel = uilabel(app.UIFigure);
-            app.FolderLabel.Position = [20 470 100 22];
+            % Row 2: Folder selection
+            folderGrid = uigridlayout(mainGrid, [1, 3]);
+            folderGrid.Layout.Row = 2;
+            folderGrid.Layout.Column = 1;
+            folderGrid.RowHeight = {'1x'};
+            folderGrid.ColumnWidth = {90, '1x', 110};
+            folderGrid.Padding = [0 0 0 0];
+            folderGrid.ColumnSpacing = 8;
+            folderGrid.BackgroundColor = app.BG;
+
+            app.FolderLabel = uilabel(folderGrid);
+            app.FolderLabel.Layout.Row = 1;
+            app.FolderLabel.Layout.Column = 1;
             app.FolderLabel.Text = 'Top folder:';
             app.FolderLabel.FontWeight = 'bold';
+            app.FolderLabel.FontName = 'Segoe UI';
             app.FolderLabel.FontColor = app.TEXT;
 
-            app.FolderEdit = uieditfield(app.UIFigure, 'text');
-            app.FolderEdit.Position = [120 470 490 24];
-            app.FolderEdit.Placeholder = 'Select the TOP folder - it finds every scan underneath...';
+            app.FolderEdit = uieditfield(folderGrid, 'text');
+            app.FolderEdit.Layout.Row = 1;
+            app.FolderEdit.Layout.Column = 2;
+            app.FolderEdit.Placeholder = 'Select the TOP folder - automatically discovers all subject scans...';
             app.FolderEdit.BackgroundColor = app.PANEL;
             app.FolderEdit.FontColor = app.TEXT;
+            app.FolderEdit.FontName = 'Segoe UI';
 
-            app.BrowseButton = uibutton(app.UIFigure, 'push');
-            app.BrowseButton.Position = [620 470 100 24];
+            app.BrowseButton = uibutton(folderGrid, 'push');
+            app.BrowseButton.Layout.Row = 1;
+            app.BrowseButton.Layout.Column = 3;
             app.BrowseButton.Text = 'Browse...';
             app.BrowseButton.BackgroundColor = app.PANEL;
             app.BrowseButton.FontColor = app.TEXT;
+            app.BrowseButton.FontName = 'Segoe UI';
             app.BrowseButton.ButtonPushedFcn = @(src,evt) app.browseFolder(src,evt);
 
-            app.PxPerMmLabel = uilabel(app.UIFigure);
-            app.PxPerMmLabel.Position = [20 425 110 22];
+            % Row 3: Parameters
+            paramGrid = uigridlayout(mainGrid, [1, 5]);
+            paramGrid.Layout.Row = 3;
+            paramGrid.Layout.Column = 1;
+            paramGrid.RowHeight = {'1x'};
+            paramGrid.ColumnWidth = {100, 80, 140, 80, '1x'};
+            paramGrid.Padding = [0 0 0 0];
+            paramGrid.ColumnSpacing = 8;
+            paramGrid.BackgroundColor = app.BG;
+
+            app.PxPerMmLabel = uilabel(paramGrid);
+            app.PxPerMmLabel.Layout.Row = 1;
+            app.PxPerMmLabel.Layout.Column = 1;
             app.PxPerMmLabel.Text = 'Pixels per mm:';
+            app.PxPerMmLabel.FontName = 'Segoe UI';
             app.PxPerMmLabel.FontColor = app.TEXT;
 
-            app.PxPerMmEdit = uieditfield(app.UIFigure, 'numeric');
-            app.PxPerMmEdit.Position = [130 425 90 24];
+            app.PxPerMmEdit = uieditfield(paramGrid, 'numeric');
+            app.PxPerMmEdit.Layout.Row = 1;
+            app.PxPerMmEdit.Layout.Column = 2;
             app.PxPerMmEdit.Value = 200;
             app.PxPerMmEdit.Limits = [1 10000];
             app.PxPerMmEdit.BackgroundColor = app.PANEL;
             app.PxPerMmEdit.FontColor = app.TEXT;
+            app.PxPerMmEdit.FontName = 'Segoe UI';
 
-            app.QCSamplesLabel = uilabel(app.UIFigure);
-            app.QCSamplesLabel.Position = [260 425 140 22];
+            app.QCSamplesLabel = uilabel(paramGrid);
+            app.QCSamplesLabel.Layout.Row = 1;
+            app.QCSamplesLabel.Layout.Column = 3;
             app.QCSamplesLabel.Text = 'QC samples to show:';
+            app.QCSamplesLabel.FontName = 'Segoe UI';
             app.QCSamplesLabel.FontColor = app.TEXT;
 
-            app.QCSamplesSpinner = uispinner(app.UIFigure);
-            app.QCSamplesSpinner.Position = [400 425 90 24];
+            app.QCSamplesSpinner = uispinner(paramGrid);
+            app.QCSamplesSpinner.Layout.Row = 1;
+            app.QCSamplesSpinner.Layout.Column = 4;
             app.QCSamplesSpinner.Value = 20;
             app.QCSamplesSpinner.Limits = [4 50];
             app.QCSamplesSpinner.Step = 1;
             app.QCSamplesSpinner.BackgroundColor = app.PANEL;
             app.QCSamplesSpinner.FontColor = app.TEXT;
+            app.QCSamplesSpinner.FontName = 'Segoe UI';
 
-            app.RunButton = uibutton(app.UIFigure, 'push');
-            app.RunButton.Position = [20 370 220 40];
+            % Row 4: Action Buttons & Status
+            btnGrid = uigridlayout(mainGrid, [1, 3]);
+            btnGrid.Layout.Row = 4;
+            btnGrid.Layout.Column = 1;
+            btnGrid.RowHeight = {'1x'};
+            btnGrid.ColumnWidth = {180, 180, '1x'};
+            btnGrid.Padding = [0 0 0 0];
+            btnGrid.ColumnSpacing = 10;
+            btnGrid.BackgroundColor = app.BG;
+
+            app.RunButton = uibutton(btnGrid, 'push');
+            app.RunButton.Layout.Row = 1;
+            app.RunButton.Layout.Column = 1;
             app.RunButton.Text = 'Run batch analysis';
-            app.RunButton.FontSize = 14;
+            app.RunButton.FontSize = 13;
             app.RunButton.FontWeight = 'bold';
+            app.RunButton.FontName = 'Segoe UI';
             app.RunButton.BackgroundColor = app.ACCENT;
             app.RunButton.FontColor = [1 1 1];
             app.RunButton.ButtonPushedFcn = @(src,evt) app.runPipeline(src,evt);
 
-            app.OpenResultsButton = uibutton(app.UIFigure, 'push');
-            app.OpenResultsButton.Position = [260 370 200 40];
+            app.OpenResultsButton = uibutton(btnGrid, 'push');
+            app.OpenResultsButton.Layout.Row = 1;
+            app.OpenResultsButton.Layout.Column = 2;
             app.OpenResultsButton.Text = 'Open results folder';
             app.OpenResultsButton.Enable = 'off';
+            app.OpenResultsButton.FontSize = 13;
+            app.OpenResultsButton.FontName = 'Segoe UI';
             app.OpenResultsButton.BackgroundColor = app.PANEL;
             app.OpenResultsButton.FontColor = app.TEXT;
             app.OpenResultsButton.ButtonPushedFcn = @(src,evt) app.openResults(src,evt);
 
-            app.StatusLabel = uilabel(app.UIFigure);
-            app.StatusLabel.Position = [480 370 240 40];
+            app.StatusLabel = uilabel(btnGrid);
+            app.StatusLabel.Layout.Row = 1;
+            app.StatusLabel.Layout.Column = 3;
             app.StatusLabel.Text = 'Status: Idle';
             app.StatusLabel.FontWeight = 'bold';
-            app.StatusLabel.FontSize = 14;
+            app.StatusLabel.FontSize = 13;
+            app.StatusLabel.FontName = 'Segoe UI';
             app.StatusLabel.FontColor = app.MUTED;
             app.StatusLabel.HorizontalAlignment = 'left';
 
-            app.ProgressArea = uitextarea(app.UIFigure);
-            app.ProgressArea.Position = [20 20 700 340];
+            % Row 5: Log Progress Area (Automatically fills remaining vertical space)
+            app.ProgressArea = uitextarea(mainGrid);
+            app.ProgressArea.Layout.Row = 5;
+            app.ProgressArea.Layout.Column = 1;
             app.ProgressArea.Editable = 'off';
             app.ProgressArea.FontName = 'Consolas';
             app.ProgressArea.FontSize = 11;
             app.ProgressArea.BackgroundColor = app.PANEL;
             app.ProgressArea.FontColor = app.TEXT;
-            app.ProgressArea.Value = {''};   % init with placeholder
+            app.ProgressArea.Value = {''};
         end
     end
 

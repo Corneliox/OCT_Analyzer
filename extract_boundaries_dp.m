@@ -4,8 +4,8 @@ function [top_sc, bot_sc, end_ed] = extract_boundaries_dp(prob_map, lambda, max_
 % U-Net softmax probability maps via dynamic programming.
 % Vectorized for speed.
 
-if nargin < 2 || isempty(lambda);   lambda   = 0.1; end
-if nargin < 3 || isempty(max_jump); max_jump = 5;   end
+if nargin < 2 || isempty(lambda);   lambda   = 1.5; end
+if nargin < 3 || isempty(max_jump); max_jump = 4;   end
 
 P_bg = prob_map(:,:,1);
 P_sc = prob_map(:,:,2);
@@ -21,10 +21,24 @@ cost_end = -log(shift_down(P_ed) + eps) - log(P_bg + eps);
 
 top_sc = dp_path(cost_top, lambda, max_jump);
 bot_sc = dp_path(cost_bot, lambda, max_jump);
-end_ed = dp_path(cost_end, lambda, max_jump);
 
-bot_sc = max(bot_sc, top_sc);
-end_ed = max(end_ed, bot_sc);
+% ED boundary has higher noise & lower optical SNR at deeper depths,
+% so use higher smoothness penalty and smaller max jump to eliminate spikes.
+lambda_ed = max(lambda * 1.5, 2.0);
+max_jump_ed = min(max_jump, 3);
+end_ed = dp_path(cost_end, lambda_ed, max_jump_ed);
+
+% Robust outlier rejection for ED (strips speckle/shadow vertical spikes)
+try
+    end_ed_clean = hampel(end_ed, 11, 2.5);
+catch
+    end_ed_clean = medfilt1(end_ed, 11);
+end
+end_ed = smoothdata(end_ed_clean, 'sgolay', 15);
+
+% Enforce physical anatomical ordering (SC and ED have non-zero thickness)
+bot_sc = max(bot_sc, top_sc + 2);
+end_ed = max(end_ed, bot_sc + 5);
 end
 
 % =========================================================================

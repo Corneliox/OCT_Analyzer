@@ -5,8 +5,8 @@ function segment_new_images(input_folder, output_folder, model_path, save_overla
 
 % -------- Config -------------------------------------------------------
 trained_dir_dev = fullfile(fileparts(mfilename('fullpath')), 'trained_variantA');
-dp_lambda   = 0.1;
-dp_jump     = 5;
+dp_lambda   = 1.5;
+dp_jump     = 4;
 img_exts    = {'*.jpg', '*.jpeg', '*.png', '*.bmp', '*.tif', '*.tiff'};
 % -----------------------------------------------------------------------
 
@@ -143,8 +143,8 @@ for i = 1:batch_size:n
             end_orig = interp1(col_net, end_n, col_orig_query, 'linear', 'extrap') * scale_row;
             
             top_orig = max(1, min(m.H_orig, top_orig));
-            bot_orig = max(top_orig, min(m.H_orig, bot_orig));
-            end_orig = max(bot_orig, min(m.H_orig, end_orig));
+            bot_orig = max(top_orig + 2, min(m.H_orig, bot_orig));
+            end_orig = max(bot_orig + 5, min(m.H_orig, end_orig));
             
             thickness_sc = bot_orig - top_orig;
             thickness_ed = end_orig - bot_orig;

@@ -60,34 +60,60 @@ seconds = nan(n,1);      errmsg  = strings(n,1);
 consec_fail = 0;  prev_err = "";
 
 for i = 1:n
-    cdir     = conditions{i};
-    done_csv = fullfile([cdir '_analysis'], 'timeseries.csv');
-    already  = exist(done_csv, 'file');
+    cdir = conditions{i};
+
+    % Determine subject directory and output analysis directory (Subject level: 4.2.1)
+    [parent1, name1] = fileparts(cdir);
+    if ~isempty(parent1) && ~strcmp(parent1, cdir)
+        subj_dir = parent1;
+        proto_name = name1;
+    else
+        subj_dir = cdir;
+        proto_name = '';
+    end
+    [subj_parent, subj_name] = fileparts(subj_dir);
+    subj_analysis_dir = fullfile(subj_parent, [subj_name, '_analysis']);
+
+    % Check if multiple conditions share the same subject folder
+    same_subj_count = sum(cellfun(@(c) strcmp(fileparts(c), subj_dir), conditions));
+    if same_subj_count > 1 && ~isempty(proto_name)
+        file_prefix = proto_name;
+        done_csv = fullfile(subj_analysis_dir, [file_prefix, '_timeseries.csv']);
+    else
+        file_prefix = '';
+        done_csv = fullfile(subj_analysis_dir, 'timeseries.csv');
+    end
+
+    legacy_done_csv = fullfile([cdir '_analysis'], 'timeseries.csv');
+    already  = (exist(done_csv, 'file') > 0) || (exist(legacy_done_csv, 'file') > 0);
 
     if opt.DryRun
         status(i) = tern(already, "would skip(done)", "would PROCESS");
-        logf(fid, '[%d/%d] %-16s %s', i, n, status(i), cdir);
+        logf(fid, '[%d/%d] %-16s %s -> %s', i, n, status(i), cdir, subj_analysis_dir);
         continue;
     end
 
     if ~opt.Redo && already
         status(i) = "skipped(done)";
         consec_fail = 0;  prev_err = "";
-        logf(fid, '[%d/%d] SKIP done: %s', i, n, cdir);
+        logf(fid, '[%d/%d] SKIP done: %s (%s)', i, n, cdir, subj_analysis_dir);
         write_summary(root_folder, out_name, conditions, status, nframes, seconds, errmsg);
         continue;
     end
 
-    logf(fid, '[%d/%d] START: %s', i, n, cdir);
+    logf(fid, '[%d/%d] START: %s -> %s', i, n, cdir, subj_analysis_dir);
     t0 = tic;
     try
-        analyze_stimulation_run(cdir, 'PxPerMm', opt.PxPerMm, opt.AnalyzeArgs{:});
+        analyze_stimulation_run(cdir, 'PxPerMm', opt.PxPerMm, ...
+            'OutputDir', subj_analysis_dir, ...
+            'FilePrefix', file_prefix, ...
+            opt.AnalyzeArgs{:});
         seconds(i) = toc(t0);
         nframes(i) = count_csv_rows(done_csv);
         status(i)  = "ok";
         consec_fail = 0;  prev_err = "";
-        logf(fid, '[%d/%d] OK  %.1f min  %d frames: %s', ...
-            i, n, seconds(i)/60, nframes(i), cdir);
+        logf(fid, '[%d/%d] OK  %.1f min  %d frames: %s -> %s', ...
+            i, n, seconds(i)/60, nframes(i), cdir, subj_analysis_dir);
     catch ME
         seconds(i) = toc(t0);
         status(i)  = "failed";
@@ -149,7 +175,7 @@ end
 
 % =====================================================================
 function tf = folder_has_images(folder)
-exts = {'*.jpg','*.jpeg','*.png','*.bmp','*.tif','*.tiff'};
+exts = {'*.jpg','*.jpeg','*.png','*.bmp','*.tif','*.tiff','*.bin'};
 tf = false;
 for k = 1:numel(exts)
     if ~isempty(dir(fullfile(folder, exts{k}))); tf = true; return; end
