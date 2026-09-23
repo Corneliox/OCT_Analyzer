@@ -84,36 +84,40 @@ for i = 1:n
         done_csv = fullfile(subj_analysis_dir, 'timeseries.csv');
     end
 
+    % Primary ground-truth check (Richard V1 legacy): [cdir '_analysis']/timeseries.csv
     legacy_done_csv = fullfile([cdir '_analysis'], 'timeseries.csv');
-    already  = (exist(done_csv, 'file') > 0) || (exist(legacy_done_csv, 'file') > 0);
+    already  = (exist(legacy_done_csv, 'file') > 0);
 
     if opt.DryRun
         status(i) = tern(already, "would skip(done)", "would PROCESS");
-        logf(fid, '[%d/%d] %-16s %s -> %s', i, n, status(i), cdir, subj_analysis_dir);
+        logf(fid, '[%d/%d] %-16s %s (output -> %s_analysis)', i, n, status(i), cdir, cdir);
         continue;
     end
 
     if ~opt.Redo && already
         status(i) = "skipped(done)";
         consec_fail = 0;  prev_err = "";
-        logf(fid, '[%d/%d] SKIP done: %s (%s)', i, n, cdir, subj_analysis_dir);
+        logf(fid, '[%d/%d] SKIP done: %s_analysis', i, n, cdir);
         write_summary(root_folder, out_name, conditions, status, nframes, seconds, errmsg);
         continue;
     end
 
-    logf(fid, '[%d/%d] START: %s -> %s', i, n, cdir, subj_analysis_dir);
+    logf(fid, '[%d/%d] START: %s (legacy: %s_analysis, mirror: %s)', ...
+        i, n, cdir, cdir, subj_analysis_dir);
     t0 = tic;
     try
+        % Primary output saved directly inside protocol folder (Richard V1 legacy)
+        % and mirrored copy placed in subject analysis folder
         analyze_stimulation_run(cdir, 'PxPerMm', opt.PxPerMm, ...
-            'OutputDir', subj_analysis_dir, ...
+            'MirrorDir', subj_analysis_dir, ...
             'FilePrefix', file_prefix, ...
             opt.AnalyzeArgs{:});
         seconds(i) = toc(t0);
-        nframes(i) = count_csv_rows(done_csv);
+        nframes(i) = count_csv_rows(legacy_done_csv);
         status(i)  = "ok";
         consec_fail = 0;  prev_err = "";
-        logf(fid, '[%d/%d] OK  %.1f min  %d frames: %s -> %s', ...
-            i, n, seconds(i)/60, nframes(i), cdir, subj_analysis_dir);
+        logf(fid, '[%d/%d] OK  %.1f min  %d frames: %s_analysis', ...
+            i, n, seconds(i)/60, nframes(i), cdir);
     catch ME
         seconds(i) = toc(t0);
         status(i)  = "failed";

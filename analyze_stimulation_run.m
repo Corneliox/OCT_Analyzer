@@ -17,6 +17,7 @@ addParameter(p, 'AvgColumns', 1);
 addParameter(p, 'SkipSegmented', true);
 addParameter(p, 'CropFrac', 0.5);
 addParameter(p, 'OutputDir', '');
+addParameter(p, 'MirrorDir', '');
 addParameter(p, 'FilePrefix', '');
 parse(p, varargin{:});
 opts = p.Results;
@@ -26,6 +27,8 @@ if ~exist(parent_folder, 'dir')
     error('Parent folder not found: %s', parent_folder);
 end
 parent_clean = regexprep(parent_folder, '[\\/]+$', '');
+
+% Primary legacy location: ALWAYS inside the protocol folder (<cdir>_analysis)
 if ~isempty(opts.OutputDir)
     analysis_dir = opts.OutputDir;
 else
@@ -165,11 +168,8 @@ total_thick_mm  = (end_ed - top_sc) / px_per_mm;
 surface_disp_mm = (top_sc - top_sc(1)) / px_per_mm;
 
 % --- Step 5a: write CSV ------------------------------------------------
-prefix_str = '';
-if ~isempty(opts.FilePrefix)
-    prefix_str = [regexprep(opts.FilePrefix, '[\\/]+$', ''), '_'];
-end
-csv_path = fullfile(analysis_dir, [prefix_str, 'timeseries.csv']);
+% Legacy standard: directly saved inside the protocol's _analysis folder
+csv_path = fullfile(analysis_dir, 'timeseries.csv');
 T = table((1:N).', [all_frames.sub_idx].', [all_frames.frame_idx].', ...
     {all_frames.name}.', ...
     top_sc, bot_sc, end_ed, ...
@@ -186,10 +186,25 @@ print_stats('Total thickness (mm)',total_thick_mm);
 print_stats('Surface displacement (mm)', surface_disp_mm);
 
 % --- Step 5b: save single-panel stacked PNG (cropped) ------------------
-png_path = fullfile(analysis_dir, [prefix_str, 'timeseries.png']);
+png_path = fullfile(analysis_dir, 'timeseries.png');
 make_figure(stacked_cols, top_sc, bot_sc, end_ed, ...
     png_path, parent_clean, px_per_mm, opts.CropFrac);
 fprintf('Saved figure: %s\n', png_path);
+
+% --- Step 5c: Mirror to Subject level folder (Optional Dual-Save) ------
+if ~isempty(opts.MirrorDir)
+    try
+        if ~exist(opts.MirrorDir, 'dir'); mkdir(opts.MirrorDir); end
+        prefix_str = '';
+        if ~isempty(opts.FilePrefix)
+            prefix_str = [regexprep(opts.FilePrefix, '[\\/]+$', ''), '_'];
+        end
+        copyfile(csv_path, fullfile(opts.MirrorDir, [prefix_str, 'timeseries.csv']));
+        copyfile(png_path, fullfile(opts.MirrorDir, [prefix_str, 'timeseries.png']));
+        fprintf('Mirrored to Subject folder: %s\n', opts.MirrorDir);
+    catch
+    end
+end
 
 fprintf('\nDone.\n');
 end

@@ -1,47 +1,47 @@
-# OCT Skin Layer Analyzer v2.1.0
+# OCT Skin Layer Analyzer v2.2.0
 
 [![MATLAB](https://img.shields.io/badge/MATLAB-R2024b%2B-blue.svg)](https://www.mathworks.com/products/matlab.html)
-[![Release](https://img.shields.io/badge/Release-v2.1.0-brightgreen.svg)](https://github.com/Corneliox/OCT_Analyzer/releases)
+[![Release](https://img.shields.io/badge/Release-v2.2.0-brightgreen.svg)](https://github.com/Corneliox/OCT_Analyzer/releases)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![License](https://img.shields.io/badge/License-Academic-green.svg)]()
 
-> **High-throughput, GPU-accelerated desktop application and automated analysis pipeline for skin optical coherence tomography (OCT) B-scan segmentation, dynamic thickness tracking, and unattended batch processing.**
+> **High-throughput, GPU-accelerated desktop application and automated analysis pipeline for skin optical coherence tomography (OCT) B-scan segmentation, dynamic thickness tracking, and unattended multi-subject batch processing.**
 
 ---
 
-## ✨ What's New in v2.1.0
+## ✨ What's New in v2.2.0
 
-* 🌲 **Recursive Subject-Level Batch Discovery (`_analysis` Placement):**
-  * Select any top/master folder (e.g., grouped by protocol sets or master folders); the batch engine automatically traverses the tree, identifies all subjects (`Sub1`, `Sub2`, etc.), and places each `SubX_analysis/` directory **directly beside each subject folder**.
-  * Supports scan folders ending in `_N` or `_N.bin`, keeping intermediate raw `_out` caches untouched.
-  * Integrated resume/skip logic: already analyzed conditions are safely skipped on re-runs.
+* 🎯 **100% Legacy Pipeline Compatibility (Richard V1 Preserved):**
+  * All primary analysis outputs (`timeseries.csv` and `timeseries.png`) are saved **strictly inside the protocol directory** as `<protocol>_analysis/`, ensuring full backward compatibility with all downstream scripts.
+  * Intermediate raw `_out` segmentation caches are preserved and automatically reused.
+* 🌲 **Universal Top-Folder Crawler & Dual-Save Export:**
+  * Select any top folder level: Master Study (`oct ica/`), individual Subject (`azmi/`), or single Protocol (`1_30_after/`).
+  * The crawler automatically identifies every protocol run across all subjects and executes them in sequence.
+  * Optionally mirrors outputs into `<subject>_analysis/` for quick subject-wide comparisons without cluttering.
 * 🛡️ **Spike-Free Epidermis (`end ED`) Extraction:**
-  * Re-engineered Dynamic Programming (DP) pathfinder with enhanced regularization penalty (`\lambda = 1.5 - 2.0`) and reduced jump radius.
-  * Multi-stage outlier rejection (Hampel filter + Savitzky-Golay smoothing) eliminates speckle noise traps and vertical impulse glitches across both B-scans and time-series plots.
-  * Enforced anatomical non-zero thickness priors ($z_{\text{ED}} \ge z_{\text{bot SC}} + \Delta$).
+  * Re-engineered Dynamic Programming (DP) with curvature regularization and Hampel/Savitzky-Golay outlier filtering eliminates vertical spikes on both B-scans and time-series plots.
 * 🖥️ **Responsive High-DPI UI (Windows 10 & 11 Compatible):**
-  * Replaced rigid absolute positioning with a responsive `uigridlayout`.
-  * Seamless scaling on High-DPI monitors (100%, 125%, 150%, 175%) using native Segoe UI typography and auto-expanding log console.
+  * Built with responsive `uigridlayout`, native Segoe UI typography, and auto-expanding progress console.
 
 ---
 
 ## 📂 Supported Directory Structure
 
 ```text
-Master_OCT_Study/                  <-- [Select this or any parent folder in the App]
-├── Subject_01/
-│   └── Protocol_A/
-│       ├── scan_0.bin/            (contains B-scan frames)
-│       ├── scan_0.bin_out/        (segmentation cache)
-│       └── scan_1.bin/
-├── Subject_01_analysis/           <-- [Generated right beside Subject_01]
-│   ├── timeseries.csv
-│   └── timeseries.png
+oct ica/                           <-- [Select this or any folder in the App]
+├── azmi/
+│   ├── 1_30_after/
+│   │   ├── raw_..._MMode_0.bin/   (raw scan data)
+│   │   └── raw_..._MMode_0.bin_out/ (segmentation cache)
+│   ├── 1_30_after_analysis/       <-- [PRIMARY V1 OUTPUT: timeseries.csv & .png]
+│   ├── 1_30_before/
+│   └── 1_30_before_analysis/      <-- [PRIMARY V1 OUTPUT: timeseries.csv & .png]
 │
-├── Subject_02/
-│   └── Protocol_B/
-│       └── scan_0.bin/
-├── Subject_02_analysis/           <-- [Generated right beside Subject_02]
+├── azmi_analysis/                 <-- [MIRRORED SUBJECT OVERVIEW]
+│   ├── 1_30_after_timeseries.csv
+│   ├── 1_30_after_timeseries.png
+│   ├── 1_30_before_timeseries.csv
+│   └── ...
 │
 ├── batch_summary.csv              <-- [Overall batch execution report]
 └── batch_log.txt                  <-- [Unattended execution log]
