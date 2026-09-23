@@ -1,7 +1,7 @@
-# OCT Skin Layer Analyzer v2.2.0
+# OCT Skin Layer Analyzer v2.3.0
 
 [![MATLAB](https://img.shields.io/badge/MATLAB-R2024b%2B-blue.svg)](https://www.mathworks.com/products/matlab.html)
-[![Release](https://img.shields.io/badge/Release-v2.2.0-brightgreen.svg)](https://github.com/Corneliox/OCT_Analyzer/releases)
+[![Release](https://img.shields.io/badge/Release-v2.3.0-brightgreen.svg)](https://github.com/Corneliox/OCT_Analyzer/releases)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![License](https://img.shields.io/badge/License-Academic-green.svg)]()
 
@@ -9,8 +9,12 @@
 
 ---
 
-## ✨ What's New in v2.2.0
+## ✨ What's New in v2.3.0
 
+* 🛡️ **Robust Hierarchy & Timestamp Parsing (Zero False Positives):**
+  * Patched directory crawler regex (`_(\d+)(?:\.[a-zA-Z]+)?$`) to safely handle decimal-dot timestamps (e.g. `1_30_after_11.33` or `run_14.50`) without mistakenly treating them as scan indices or file extensions.
+  * Added strict non-directory file verification (`~[d.isdir]`) to ensure raw scan folders (e.g., `MMode_0.bin/`) are never mistaken for image files.
+  * Guarantees flawless end-to-end traversal from top Master Root (`oct ica/`) down through Subject folders (`bayu/`, `azmi/`) directly into Protocol runs.
 * 🎯 **100% Legacy Pipeline Compatibility (Richard V1 Preserved):**
   * All primary analysis outputs (`timeseries.csv` and `timeseries.png`) are saved **strictly inside the protocol directory** as `<protocol>_analysis/`, ensuring full backward compatibility with all downstream scripts.
   * Intermediate raw `_out` segmentation caches are preserved and automatically reused.

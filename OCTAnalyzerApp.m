@@ -36,7 +36,7 @@ classdef OCTAnalyzerApp < matlab.apps.AppBase
     methods (Access = private)
 
         function startupFcn(app)
-            app.UIFigure.Name = 'OCT Skin Layer Analyzer v2.2.0';
+            app.UIFigure.Name = 'OCT Skin Layer Analyzer v2.3.0';
             app.log('Ready. Pick the TOP folder (any level: root, subject, or protocol).');
             app.log('Generates standard <protocol>_analysis folders (legacy v1) and mirrors to subject folders.');
         end
@@ -209,7 +209,7 @@ classdef OCTAnalyzerApp < matlab.apps.AppBase
 
             app.UIFigure = uifigure('Visible', 'off');
             app.UIFigure.Position = [left_pos bottom_pos app_w app_h];
-            app.UIFigure.Name = 'OCT Skin Layer Analyzer v2.2.0';
+            app.UIFigure.Name = 'OCT Skin Layer Analyzer v2.3.0';
             app.UIFigure.Color = app.BG;
             app.UIFigure.AutoResizeChildren = 'on';
 
@@ -225,7 +225,7 @@ classdef OCTAnalyzerApp < matlab.apps.AppBase
             app.TitleLabel = uilabel(mainGrid);
             app.TitleLabel.Layout.Row = 1;
             app.TitleLabel.Layout.Column = 1;
-            app.TitleLabel.Text = 'OCT Skin Layer Analyzer v2.2.0';
+            app.TitleLabel.Text = 'OCT Skin Layer Analyzer v2.3.0';
             app.TitleLabel.FontSize = 18;
             app.TitleLabel.FontWeight = 'bold';
             app.TitleLabel.FontName = 'Segoe UI';
