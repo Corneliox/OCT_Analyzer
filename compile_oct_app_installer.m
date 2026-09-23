@@ -49,8 +49,9 @@ for i = 1:numel(all_files)
     end
 end
 
-if exist(output_dir, 'dir'); rmdir(output_dir, 's'); end
-mkdir(output_dir);
+if ~exist(output_dir, 'dir')
+    mkdir(output_dir);
+end
 
 fprintf('\nBuilding standalone app (5-15 minutes)...\n\n');
 
@@ -79,9 +80,10 @@ compiler.package.installer(results, ...
     'AuthorName', 'Your Name', ...
     'Description', 'Automated segmentation and analysis of skin OCT B-scan images', ...
     'Version', '2.1.0', ...
-    'OutputDir', fullfile(output_dir, 'installer'), ...
+    'OutputDir', output_dir, ...
     'RuntimeDelivery', 'web');
 
-fprintf('\nDone! Installer in: %s\n', fullfile(output_dir, 'installer'));
-fprintf('Distribute the single installer .exe to users.\n');
+fprintf('\nDone! Standalone app & Installer ready in: %s\n', output_dir);
+fprintf('1. Standalone executable: %s.exe\n', fullfile(output_dir, app_name));
+fprintf('2. Installer package: %s.exe\n', fullfile(output_dir, installer_name));
 end
