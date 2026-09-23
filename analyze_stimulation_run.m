@@ -48,7 +48,7 @@ subs = subs(keep_not_out);
 
 sub_idx = nan(numel(subs), 1);
 for i = 1:numel(subs)
-    tok = regexp(subs(i).name, '_(\d+)(?:\.[^.]+)?$', 'tokens', 'once');
+    tok = regexp(subs(i).name, '_(\d+)(?:\.[a-zA-Z]+)?$', 'tokens', 'once');
     if ~isempty(tok); sub_idx(i) = str2double(tok{1}); end
 end
 keep = ~isnan(sub_idx);

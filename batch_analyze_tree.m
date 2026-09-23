@@ -170,7 +170,9 @@ d = d([d.isdir] & ~ismember({d.name}, {'.','..'}));
 d = d(~endsWith({d.name}, '_out', 'IgnoreCase', true));
 tf = false;
 for i = 1:numel(d)
-    if ~isempty(regexp(d(i).name, '_(\d+)(?:\.[^.]+)?$', 'once')) ...
+    % Only match folders ending with _N or _N.<alphabetic_ext> (e.g. _0.bin, _1)
+    % This prevents timestamps with dots like _11.33 from ever matching
+    if ~isempty(regexp(d(i).name, '_(\d+)(?:\.[a-zA-Z]+)?$', 'once')) ...
             && folder_has_images(fullfile(folder, d(i).name))
         tf = true; return;
     end
@@ -179,10 +181,12 @@ end
 
 % =====================================================================
 function tf = folder_has_images(folder)
-exts = {'*.jpg','*.jpeg','*.png','*.bmp','*.tif','*.tiff','*.bin'};
+exts = {'*.jpg','*.jpeg','*.png','*.bmp','*.tif','*.tiff'};
 tf = false;
 for k = 1:numel(exts)
-    if ~isempty(dir(fullfile(folder, exts{k}))); tf = true; return; end
+    d = dir(fullfile(folder, exts{k}));
+    d = d(~[d.isdir]); % Must be actual image files, not subdirectories
+    if ~isempty(d); tf = true; return; end
 end
 end
 

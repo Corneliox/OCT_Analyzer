@@ -154,7 +154,7 @@ classdef OCTAnalyzerApp < matlab.apps.AppBase
             d = d(~endsWith({d.name}, '_out', 'IgnoreCase', true));
             best_idx = inf;
             for i = 1:numel(d)
-                tok = regexp(d(i).name, '_(\d+)(?:\.[^.]+)?$', 'tokens', 'once');
+                tok = regexp(d(i).name, '_(\d+)(?:\.[a-zA-Z]+)?$', 'tokens', 'once');
                 if ~isempty(tok)
                     idx = str2double(tok{1});
                     if idx < best_idx
